@@ -4,6 +4,6 @@ import { createCase, editCase, getAllCases } from '../controllers/caseController
 const caseRouter = express.Router()
 
 caseRouter.post('/create',isLogged, checkStaff, createCase)
-caseRouter.get('/', getAllCases)
-caseRouter.patch('/edit/:id',checkStaff, editCase)
+caseRouter.get('/',isLogged, checkStaff, getAllCases)
+caseRouter.patch('/edit/:id',isLogged, checkStaff, editCase)
 export default caseRouter

@@ -13,7 +13,7 @@ const usrSchema = mongoose.Schema({
     role:{
         type:String,
         enum:['admin', 'staff'],
-        default:'admin'
+        default:'staff'
     }
 
 

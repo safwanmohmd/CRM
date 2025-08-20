@@ -3,12 +3,14 @@ import mongoose from 'mongoose'
 import userRouter from './routes/userRoute.js'
 import customerRouter from './routes/customerRoutes.js'
 import caseRouter from './routes/caseRoutes.js'
+import dotenv from'dotenv'
+dotenv.config()
 const app = express()
 
-mongoose.connect('mongodb+srv://safwankilinakkode53:hBJVohhwV2ovqVOC@cluster0.r0g00uq.mongodb.net/notesapp?retryWrites=true&w=majority&appName=Cluster0').then(
+mongoose.connect(process.env.MONGO_URI).then(
     console.log('connected to mongodb')
 ).then(
-    app.listen(3000,()=>{
+    app.listen(process.env.PORT,()=>{
         console.log('server started');
     })
 )

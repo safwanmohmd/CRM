@@ -1,43 +1,111 @@
 import userModel from '../model/userModel.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-export const createUser = async(req,res)=>{
-    const {username,password} = req.body
-    
-    if(!username || !password){
-        return res.json({message :'some fields are required'})
+export const createUser = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Username and password are required"
+      });
     }
 
-    const userExist = await userModel.findOne({username})
-    if(userExist){
-        return res.json({message : 'username alredy exist'})
+    const userExist = await userModel.findOne({ username });
+    if (userExist) {
+      return res.status(409).json({   // 409 Conflict
+        success: false,
+        message: "Username already exists"
+      });
     }
 
-const hashPass = await bcrypt.hash(password,10)
-    const newUser = await userModel.create({username,password:hashPass})
-   
-    res.json({message:"created new user", newUser})
-}
+    const hashPass = await bcrypt.hash(password, 10);
+    const newUser = await userModel.create({ username, password: hashPass });
 
-export const loginUser = async (req,res)=>{
-    const {username , password} = req.body
-    const user = await userModel.findOne({username})
-    if(!user){
-        return res.json({message : "You are not registered"})
+    return res.status(201).json({
+      success: true,
+      message: "New user created successfully",
+      data: newUser
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+};
+
+// ✅ Login User
+export const loginUser = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Username and password are required"
+      });
     }
 
-    const verifyed = await bcrypt.compare(password, user.password )
-    if(!verifyed){
-       return res.json({message : 'password not match'})
+    const user = await userModel.findOne({ username });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not registered"
+      });
     }
 
-    const token = jwt.sign({userId: user._id, role:user.role},'secret')
-    res.json({message: "Logged Successfully", token})
+    const verified = await bcrypt.compare(password, user.password);
+    if (!verified) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid password"
+      });
+    }
 
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.SECRET,
+      { expiresIn: "1h" }
+    );
 
-}
+    return res.status(200).json({
+      success: true,
+      message: "Logged in successfully",
+      token
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+};
 
-export const getUsers = async (req,res)=>{
-    const users = await userModel.find({})
-    res.json(users)
-}
+// ✅ Get All Users
+export const getUsers = async (req, res) => {
+  try {
+    const users = await userModel.find({});
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No users found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Users fetched successfully",
+      data: users
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+};
